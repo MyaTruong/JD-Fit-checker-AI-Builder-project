@@ -1,7 +1,31 @@
-import { useState } from 'react'
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result
+      const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
-function JDInput() {
-  const [mode, setMode] = useState('text')
+function JDInput({ mode, onModeChange, text, onTextChange, image, onImageChange }) {
+  async function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) {
+      onImageChange(null)
+      return
+    }
+    const data = await fileToBase64(file)
+    onImageChange({
+      mediaType: file.type,
+      data,
+      fileName: file.name,
+      previewUrl: URL.createObjectURL(file),
+    })
+  }
 
   return (
     <div className="panel">
@@ -10,7 +34,7 @@ function JDInput() {
         <button
           type="button"
           className="toggle-button"
-          onClick={() => setMode(mode === 'text' ? 'image' : 'text')}
+          onClick={() => onModeChange(mode === 'text' ? 'image' : 'text')}
         >
           {mode === 'text' ? 'Chuyển sang upload ảnh' : 'Chuyển sang dán text'}
         </button>
@@ -21,9 +45,16 @@ function JDInput() {
           className="text-input"
           placeholder="Dán nội dung Job Description vào đây..."
           rows={10}
+          value={text}
+          onChange={(e) => onTextChange(e.target.value)}
         />
       ) : (
-        <input type="file" accept="image/*" className="file-input" />
+        <div className="file-upload">
+          <input type="file" accept="image/*" className="file-input" onChange={handleFileChange} />
+          {image && (
+            <img className="image-preview" src={image.previewUrl} alt="JD preview" />
+          )}
+        </div>
       )}
     </div>
   )
