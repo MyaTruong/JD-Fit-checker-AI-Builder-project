@@ -1,0 +1,90 @@
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  text-align: left;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.inputs-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.panel {
+  flex: 1 1 320px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.panel-header h2 {
+  margin: 0;
+}
+
+.toggle-button {
+  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.text-input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  resize: vertical;
+}
+
+.file-input {
+  width: 100%;
+}
+
+.analyze-button {
+  align-self: center;
+  font-size: 16px;
+  padding: 10px 24px;
+  border-radius: 6px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.analyze-button:hover {
+  border-color: var(--accent-border);
+}
+
+.results-panel {
+  min-height: 120px;
+}
+
+.placeholder-text {
+  color: var(--text);
+  opacity: 0.7;
+}
