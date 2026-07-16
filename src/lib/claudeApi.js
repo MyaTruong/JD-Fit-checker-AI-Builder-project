@@ -1,10 +1,17 @@
-export async function analyzeJDFit({ jdMode, jdText, jdImage, profileText }) {
+export async function analyzeJDFit({ jdMode, jdText, jdImage, profileMode, profileText, profileImages }) {
   let response
   try {
     response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jdMode, jdText, jdImage, profileText }),
+      body: JSON.stringify({
+        jdMode,
+        jdText,
+        jdImage,
+        profileMode,
+        profileText,
+        profileImages: (profileImages || []).map(({ mediaType, data }) => ({ mediaType, data })),
+      }),
     })
   } catch {
     throw new Error('Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng và thử lại.')

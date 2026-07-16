@@ -9,17 +9,32 @@ function App() {
   const [jdMode, setJdMode] = useState('text')
   const [jdText, setJdText] = useState('')
   const [jdImage, setJdImage] = useState(null)
+
+  const [profileMode, setProfileMode] = useState('text')
   const [profileText, setProfileText] = useState('')
+  const [profileImages, setProfileImages] = useState([])
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
 
+  function handleAddProfileImages(newImages) {
+    setProfileImages((prev) => [...prev, ...newImages])
+  }
+
+  function handleRemoveProfileImage(index) {
+    setProfileImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
   async function handleAnalyze() {
     setError('')
 
-    if (!profileText.trim()) {
+    if (profileMode === 'text' && !profileText.trim()) {
       setError('Vui lòng nhập profile của bạn trước khi phân tích.')
+      return
+    }
+    if (profileMode === 'image' && profileImages.length === 0) {
+      setError('Vui lòng upload ít nhất 1 ảnh CV/profile trước khi phân tích.')
       return
     }
     if (jdMode === 'text' && !jdText.trim()) {
@@ -34,7 +49,7 @@ function App() {
     setLoading(true)
     setResult(null)
     try {
-      const data = await analyzeJDFit({ jdMode, jdText, jdImage, profileText })
+      const data = await analyzeJDFit({ jdMode, jdText, jdImage, profileMode, profileText, profileImages })
       setResult(data)
     } catch (err) {
       setError(err.message || 'Đã xảy ra lỗi không xác định.')
@@ -60,7 +75,15 @@ function App() {
             image={jdImage}
             onImageChange={setJdImage}
           />
-          <ProfileInput value={profileText} onChange={setProfileText} />
+          <ProfileInput
+            mode={profileMode}
+            onModeChange={setProfileMode}
+            text={profileText}
+            onTextChange={setProfileText}
+            images={profileImages}
+            onAddImages={handleAddProfileImages}
+            onRemoveImage={handleRemoveProfileImage}
+          />
         </div>
 
         <button type="button" className="analyze-button" onClick={handleAnalyze} disabled={loading}>
@@ -73,6 +96,7 @@ function App() {
           result={result}
           jdMode={jdMode}
           jdText={jdText}
+          profileMode={profileMode}
           profileText={profileText}
         />
       </main>

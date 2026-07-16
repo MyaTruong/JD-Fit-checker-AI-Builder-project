@@ -33,27 +33,37 @@ function getClient() {
   return new Anthropic({ apiKey })
 }
 
-function buildUserContent({ jdMode, jdText, jdImage, profileText }) {
+function imageBlock(image) {
+  return {
+    type: 'image',
+    source: {
+      type: 'base64',
+      media_type: image.mediaType,
+      data: image.data,
+    },
+  }
+}
+
+function buildUserContent({ jdMode, jdText, jdImage, profileMode, profileText, profileImages }) {
   const content = []
 
   if (jdMode === 'image') {
-    content.push({
-      type: 'image',
-      source: {
-        type: 'base64',
-        media_type: jdImage.mediaType,
-        data: jdImage.data,
-      },
-    })
-    content.push({
-      type: 'text',
-      text: `Đây là ảnh chụp Job Description. Hãy đọc nội dung JD trong ảnh trên.\n\nProfile của ứng viên:\n${profileText}`,
-    })
+    content.push({ type: 'text', text: 'Đây là ảnh chụp Job Description:' })
+    content.push(imageBlock(jdImage))
   } else {
+    content.push({ type: 'text', text: `Job Description:\n${jdText}` })
+  }
+
+  if (profileMode === 'image') {
     content.push({
       type: 'text',
-      text: `Job Description:\n${jdText}\n\nProfile của ứng viên:\n${profileText}`,
+      text: `Đây là ${profileImages.length} ảnh chụp CV/profile của ứng viên (theo đúng thứ tự trang), hãy đọc toàn bộ nội dung trước khi phân tích:`,
     })
+    for (const image of profileImages) {
+      content.push(imageBlock(image))
+    }
+  } else {
+    content.push({ type: 'text', text: `Profile của ứng viên:\n${profileText}` })
   }
 
   return content
@@ -85,9 +95,15 @@ function extractJson(responseText) {
 }
 
 export function validateAnalyzeInput(body) {
-  const { jdMode, jdText, jdImage, profileText } = body || {}
+  const { jdMode, jdText, jdImage, profileMode, profileText, profileImages } = body || {}
 
-  if (!profileText || !profileText.trim()) {
+  if (profileMode === 'image') {
+    if (!profileImages || profileImages.length === 0) {
+      const err = new Error('Vui lòng upload ít nhất 1 ảnh CV/profile trước khi phân tích.')
+      err.statusCode = 400
+      throw err
+    }
+  } else if (!profileText || !profileText.trim()) {
     const err = new Error('Vui lòng nhập profile của bạn trước khi phân tích.')
     err.statusCode = 400
     throw err

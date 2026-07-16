@@ -1,15 +1,4 @@
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result
-      const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
-      resolve(base64)
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
+import { fileToBase64 } from '../lib/fileToBase64'
 
 function JDInput({ mode, onModeChange, text, onTextChange, image, onImageChange }) {
   async function handleFileChange(e) {

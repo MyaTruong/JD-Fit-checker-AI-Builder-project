@@ -6,8 +6,9 @@ const DECISION_CLASS = {
   Skip: 'decision-skip',
 }
 
-function buildCopyText({ result, jdMode, jdText, profileText }) {
+function buildCopyText({ result, jdMode, jdText, profileMode, profileText }) {
   const jdSection = jdMode === 'image' ? '[JD được cung cấp dưới dạng ảnh]' : jdText
+  const profileSection = profileMode === 'image' ? '[Profile được cung cấp dưới dạng ảnh CV nhiều trang]' : profileText
 
   const requirementsText = result.requirements
     .map((r) => `- ${r.fit} ${r.item}${r.note ? ` — ${r.note}` : ''}`)
@@ -19,7 +20,7 @@ function buildCopyText({ result, jdMode, jdText, profileText }) {
 ${jdSection}
 
 === Profile ===
-${profileText}
+${profileSection}
 
 === Kết quả phân tích ===
 Fit score: ${result.fit_score}%
@@ -38,11 +39,11 @@ ${gapsText}
 Hãy tối ưu CV của tôi dựa trên phân tích sau:`
 }
 
-function ResultsSection({ loading, error, result, jdMode, jdText, profileText }) {
+function ResultsSection({ loading, error, result, jdMode, jdText, profileMode, profileText }) {
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
-    const text = buildCopyText({ result, jdMode, jdText, profileText })
+    const text = buildCopyText({ result, jdMode, jdText, profileMode, profileText })
     try {
       await navigator.clipboard.writeText(text)
       setCopied(true)
