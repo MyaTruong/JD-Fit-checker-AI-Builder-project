@@ -8,7 +8,7 @@ import './App.css'
 function App() {
   const [jdMode, setJdMode] = useState('text')
   const [jdText, setJdText] = useState('')
-  const [jdImage, setJdImage] = useState(null)
+  const [jdImages, setJdImages] = useState([])
 
   const [profileMode, setProfileMode] = useState('text')
   const [profileText, setProfileText] = useState('')
@@ -17,6 +17,14 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
+
+  function handleAddJdImages(newImages) {
+    setJdImages((prev) => [...prev, ...newImages])
+  }
+
+  function handleRemoveJdImage(index) {
+    setJdImages((prev) => prev.filter((_, i) => i !== index))
+  }
 
   function handleAddProfileImages(newImages) {
     setProfileImages((prev) => [...prev, ...newImages])
@@ -41,15 +49,15 @@ function App() {
       setError('Vui lòng nhập nội dung Job Description trước khi phân tích.')
       return
     }
-    if (jdMode === 'image' && !jdImage) {
-      setError('Vui lòng upload ảnh Job Description trước khi phân tích.')
+    if (jdMode === 'image' && jdImages.length === 0) {
+      setError('Vui lòng upload ít nhất 1 ảnh Job Description trước khi phân tích.')
       return
     }
 
     setLoading(true)
     setResult(null)
     try {
-      const data = await analyzeJDFit({ jdMode, jdText, jdImage, profileMode, profileText, profileImages })
+      const data = await analyzeJDFit({ jdMode, jdText, jdImages, profileMode, profileText, profileImages })
       setResult(data)
     } catch (err) {
       setError(err.message || 'Đã xảy ra lỗi không xác định.')
@@ -72,8 +80,9 @@ function App() {
             onModeChange={setJdMode}
             text={jdText}
             onTextChange={setJdText}
-            image={jdImage}
-            onImageChange={setJdImage}
+            images={jdImages}
+            onAddImages={handleAddJdImages}
+            onRemoveImage={handleRemoveJdImage}
           />
           <ProfileInput
             mode={profileMode}

@@ -44,12 +44,17 @@ function imageBlock(image) {
   }
 }
 
-function buildUserContent({ jdMode, jdText, jdImage, profileMode, profileText, profileImages }) {
+function buildUserContent({ jdMode, jdText, jdImages, profileMode, profileText, profileImages }) {
   const content = []
 
   if (jdMode === 'image') {
-    content.push({ type: 'text', text: 'Đây là ảnh chụp Job Description:' })
-    content.push(imageBlock(jdImage))
+    content.push({
+      type: 'text',
+      text: `Đây là ${jdImages.length} ảnh chụp Job Description (theo đúng thứ tự trang), hãy đọc toàn bộ nội dung trước khi phân tích:`,
+    })
+    for (const image of jdImages) {
+      content.push(imageBlock(image))
+    }
   } else {
     content.push({ type: 'text', text: `Job Description:\n${jdText}` })
   }
@@ -95,7 +100,7 @@ function extractJson(responseText) {
 }
 
 export function validateAnalyzeInput(body) {
-  const { jdMode, jdText, jdImage, profileMode, profileText, profileImages } = body || {}
+  const { jdMode, jdText, jdImages, profileMode, profileText, profileImages } = body || {}
 
   if (profileMode === 'image') {
     if (!profileImages || profileImages.length === 0) {
@@ -110,8 +115,8 @@ export function validateAnalyzeInput(body) {
   }
 
   if (jdMode === 'image') {
-    if (!jdImage || !jdImage.data || !jdImage.mediaType) {
-      const err = new Error('Vui lòng upload ảnh Job Description trước khi phân tích.')
+    if (!jdImages || jdImages.length === 0) {
+      const err = new Error('Vui lòng upload ít nhất 1 ảnh Job Description trước khi phân tích.')
       err.statusCode = 400
       throw err
     }
@@ -131,6 +136,7 @@ export async function runAnalysis(body) {
     response = await client.messages.create({
       model: MODEL,
       max_tokens: 2048,
+      temperature: 0,
       system: SYSTEM_PROMPT,
       messages: [
         {
@@ -140,11 +146,15 @@ export async function runAnalysis(body) {
       ],
     })
   } catch (apiError) {
-    const err = new Error(
-      apiError?.message
-        ? `Lỗi khi gọi Claude API: ${apiError.message}`
-        : 'Lỗi khi gọi Claude API. Vui lòng kiểm tra kết nối mạng hoặc API key.'
-    )
+    let message
+    if (apiError instanceof Anthropic.APIConnectionError) {
+      message = 'Server không thể kết nối tới Claude API do lỗi mạng. Vui lòng thử lại sau.'
+    } else if (apiError?.message) {
+      message = `Lỗi từ Claude API: ${apiError.message}`
+    } else {
+      message = 'Lỗi khi gọi Claude API. Vui lòng thử lại.'
+    }
+    const err = new Error(message)
     err.statusCode = apiError?.status || 502
     throw err
   }

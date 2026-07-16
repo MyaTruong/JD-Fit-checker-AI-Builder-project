@@ -1,19 +1,20 @@
 import { fileToBase64 } from '../lib/fileToBase64'
 
-function JDInput({ mode, onModeChange, text, onTextChange, image, onImageChange }) {
-  async function handleFileChange(e) {
-    const file = e.target.files?.[0]
-    if (!file) {
-      onImageChange(null)
-      return
-    }
-    const data = await fileToBase64(file)
-    onImageChange({
-      mediaType: file.type,
-      data,
-      fileName: file.name,
-      previewUrl: URL.createObjectURL(file),
-    })
+function JDInput({ mode, onModeChange, text, onTextChange, images, onAddImages, onRemoveImage }) {
+  async function handleFilesChange(e) {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    const newImages = await Promise.all(
+      files.map(async (file) => ({
+        mediaType: file.type,
+        data: await fileToBase64(file),
+        fileName: file.name,
+        previewUrl: URL.createObjectURL(file),
+      }))
+    )
+    onAddImages(newImages)
+    e.target.value = ''
   }
 
   return (
@@ -39,9 +40,29 @@ function JDInput({ mode, onModeChange, text, onTextChange, image, onImageChange 
         />
       ) : (
         <div className="file-upload">
-          <input type="file" accept="image/*" className="file-input" onChange={handleFileChange} />
-          {image && (
-            <img className="image-preview" src={image.previewUrl} alt="JD preview" />
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="file-input"
+            onChange={handleFilesChange}
+          />
+          {images.length > 0 && (
+            <div className="thumbnail-grid">
+              {images.map((img, idx) => (
+                <div className="thumbnail-item" key={idx}>
+                  <img className="thumbnail-preview" src={img.previewUrl} alt={`JD trang ${idx + 1}`} />
+                  <button
+                    type="button"
+                    className="thumbnail-remove"
+                    aria-label={`Xóa ảnh ${idx + 1}`}
+                    onClick={() => onRemoveImage(idx)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}
