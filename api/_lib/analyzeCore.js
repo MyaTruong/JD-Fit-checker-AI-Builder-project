@@ -8,8 +8,10 @@ Nhiệm vụ của bạn, dựa trên JD và profile được cung cấp:
 1. Liệt kê từng yêu cầu chính trong JD, đánh giá mức độ đáp ứng của profile với từng yêu cầu bằng một trong 3 ký hiệu: "✅" (đáp ứng đầy đủ), "⚠️" (đáp ứng một phần), "❌" (chưa đáp ứng). Kèm ghi chú ngắn gọn giải thích lý do.
 2. Tính fit score tổng (một số nguyên từ 0 đến 100, thể hiện % phù hợp).
 3. Dựa trên fit score, đưa ra quyết định: "Apply" nếu fit score >= 70, "Consider" nếu fit score từ 50 đến 69, "Skip" nếu fit score < 50.
-4. Mô tả ngắn gọn (2-3 câu) "chân dung ứng viên lý tưởng" cho vị trí này theo JD.
-5. Liệt kê 2-3 gap (khoảng cách) chính giữa profile và JD.
+4. Viết "score_reasoning": 1 đoạn 2-4 câu giải thích LOGIC đằng sau fit_score — không lặp lại bảng requirements, mà tổng hợp thành lý do có tính thuyết phục (điểm mạnh nào kéo điểm lên, gap nào kéo điểm xuống, vì sao rơi vào ngưỡng Apply/Consider/Skip).
+5. Mô tả ngắn gọn (2-3 câu) "chân dung ứng viên lý tưởng" cho vị trí này theo JD.
+6. Liệt kê 2-3 "strengths_to_highlight" — điểm mạnh của ứng viên nên được nhấn mạnh khi apply/phỏng vấn. Mỗi điểm mạnh phải: (a) match với 1 yêu cầu KHÓ/quan trọng trong JD, không phải yêu cầu chung chung, và (b) phần "why_it_matters" nêu rõ vì sao đây là lợi thế NGÁCH so với các ứng viên khác cùng apply — không chỉ liệt kê lại kinh nghiệm.
+7. Liệt kê 2-3 "gaps" (khoảng cách) chính giữa profile và JD, mỗi gap kèm 1 "quick_action" — gợi ý hành động ngắn gọn trong 1 câu, cụ thể và có thể làm được ngay (KHÔNG viết roadmap dài hạn, không mốc thời gian, không kế hoạch học tập).
 
 QUAN TRỌNG: Chỉ trả về DUY NHẤT một JSON object hợp lệ, không kèm bất kỳ text, markdown, hay code fence nào khác. JSON phải đúng cấu trúc sau:
 
@@ -17,8 +19,10 @@ QUAN TRỌNG: Chỉ trả về DUY NHẤT một JSON object hợp lệ, không k
   "requirements": [{"item": "string", "fit": "✅|⚠️|❌", "note": "string"}],
   "fit_score": number,
   "decision": "Apply|Consider|Skip",
+  "score_reasoning": "string",
   "ideal_candidate": "string",
-  "gaps": ["string", "string"]
+  "strengths_to_highlight": [{"strength": "string", "why_it_matters": "string"}],
+  "gaps": [{"gap": "string", "quick_action": "string"}]
 }`
 
 function getClient() {
@@ -88,7 +92,15 @@ function extractJson(responseText) {
     throw err
   }
 
-  const requiredKeys = ['requirements', 'fit_score', 'decision', 'ideal_candidate', 'gaps']
+  const requiredKeys = [
+    'requirements',
+    'fit_score',
+    'decision',
+    'score_reasoning',
+    'ideal_candidate',
+    'strengths_to_highlight',
+    'gaps',
+  ]
   const missing = requiredKeys.filter((key) => !(key in parsed))
   if (missing.length > 0) {
     const err = new Error(`Kết quả phân tích thiếu trường: ${missing.join(', ')}.`)
@@ -135,7 +147,7 @@ export async function runAnalysis(body) {
   try {
     response = await client.messages.create({
       model: MODEL,
-      max_tokens: 2048,
+      max_tokens: 3072,
       temperature: 0,
       system: SYSTEM_PROMPT,
       messages: [

@@ -195,14 +195,39 @@
   color: #c0392b;
 }
 
+.score-reasoning {
+  margin: -8px 0 0;
+  font-style: italic;
+  color: var(--text);
+  opacity: 0.85;
+}
+
 .ideal-candidate h3,
+.strengths h3,
 .gaps h3 {
   margin: 0 0 8px;
 }
 
+.strengths ul,
 .gaps ul {
   margin: 0;
   padding-left: 20px;
+}
+
+.strengths li,
+.gaps li {
+  margin-bottom: 8px;
+}
+
+.strength-why {
+  opacity: 0.85;
+}
+
+.gap-action {
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.85;
+  margin-top: 2px;
 }
 
 .copy-block {

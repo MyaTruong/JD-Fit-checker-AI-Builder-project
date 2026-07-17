@@ -14,7 +14,11 @@ function buildCopyText({ result, jdMode, jdText, profileMode, profileText }) {
     .map((r) => `- ${r.fit} ${r.item}${r.note ? ` — ${r.note}` : ''}`)
     .join('\n')
 
-  const gapsText = result.gaps.map((g) => `- ${g}`).join('\n')
+  const strengthsText = result.strengths_to_highlight
+    .map((s) => `- ${s.strength} — ${s.why_it_matters}`)
+    .join('\n')
+
+  const gapsText = result.gaps.map((g) => `- ${g.gap} (Gợi ý: ${g.quick_action})`).join('\n')
 
   return `=== Job Description ===
 ${jdSection}
@@ -25,12 +29,16 @@ ${profileSection}
 === Kết quả phân tích ===
 Fit score: ${result.fit_score}%
 Quyết định: ${result.decision}
+Lý do: ${result.score_reasoning}
 
 Chi tiết yêu cầu:
 ${requirementsText}
 
 Chân dung ứng viên lý tưởng:
 ${result.ideal_candidate}
+
+Điểm mạnh nên nhấn mạnh:
+${strengthsText}
 
 Gaps chính:
 ${gapsText}
@@ -91,16 +99,33 @@ function ResultsSection({ loading, error, result, jdMode, jdText, profileMode, p
             <span className="decision-label">{result.decision}</span>
           </div>
 
+          <p className="score-reasoning">{result.score_reasoning}</p>
+
           <div className="ideal-candidate">
             <h3>Chân dung ứng viên lý tưởng</h3>
             <p>{result.ideal_candidate}</p>
           </div>
 
+          <div className="strengths">
+            <h3>Điểm mạnh nên nhấn mạnh</h3>
+            <ul>
+              {result.strengths_to_highlight.map((s, idx) => (
+                <li key={idx}>
+                  <strong>{s.strength}</strong>
+                  <span className="strength-why"> — {s.why_it_matters}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div className="gaps">
             <h3>Gaps chính</h3>
             <ul>
-              {result.gaps.map((gap, idx) => (
-                <li key={idx}>{gap}</li>
+              {result.gaps.map((g, idx) => (
+                <li key={idx}>
+                  {g.gap}
+                  <div className="gap-action">Gợi ý: {g.quick_action}</div>
+                </li>
               ))}
             </ul>
           </div>
