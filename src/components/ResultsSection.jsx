@@ -6,6 +6,39 @@ const DECISION_CLASS = {
   Skip: 'decision-skip',
 }
 
+const ARC_RADIUS = 52
+const ARC_CIRCUMFERENCE = 2 * Math.PI * ARC_RADIUS
+
+function FitScoreArc({ fitScore, decision }) {
+  const clamped = Math.max(0, Math.min(100, fitScore))
+  const dashOffset = ARC_CIRCUMFERENCE * (1 - clamped / 100)
+
+  return (
+    <div className={`fit-score-arc ${DECISION_CLASS[decision] || ''}`}>
+      <div className="fit-score-arc-ring">
+        <svg viewBox="0 0 120 120" className="fit-score-arc-svg">
+          <circle className="fit-score-arc-track" cx="60" cy="60" r={ARC_RADIUS} />
+          <circle
+            className="fit-score-arc-progress"
+            cx="60"
+            cy="60"
+            r={ARC_RADIUS}
+            strokeDasharray={ARC_CIRCUMFERENCE}
+            strokeDashoffset={dashOffset}
+          />
+        </svg>
+        <div className="fit-score-arc-center">
+          <span className="fit-score-arc-value">{fitScore}%</span>
+        </div>
+      </div>
+      <div className="fit-score-arc-info">
+        <span className="fit-score-arc-caption">Mức độ phù hợp</span>
+        <span className="fit-score-arc-decision">{decision}</span>
+      </div>
+    </div>
+  )
+}
+
 function buildCopyText({ result, jdMode, jdText, profileMode, profileText }) {
   const jdSection = jdMode === 'image' ? '[JD được cung cấp dưới dạng ảnh]' : jdText
   const profileSection = profileMode === 'image' ? '[Profile được cung cấp dưới dạng ảnh CV nhiều trang]' : profileText
@@ -75,31 +108,30 @@ function ResultsSection({ loading, error, result, jdMode, jdText, profileMode, p
 
       {!loading && !error && result && (
         <div className="results-content">
-          <table className="requirements-table">
-            <thead>
-              <tr>
-                <th>Yêu cầu</th>
-                <th>Fit</th>
-                <th>Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.requirements.map((r, idx) => (
-                <tr key={idx}>
-                  <td>{r.item}</td>
-                  <td>{r.fit}</td>
-                  <td>{r.note}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className={`decision-box ${DECISION_CLASS[result.decision] || ''}`}>
-            <span className="fit-score">{result.fit_score}%</span>
-            <span className="decision-label">{result.decision}</span>
-          </div>
+          <FitScoreArc fitScore={result.fit_score} decision={result.decision} />
 
           <p className="score-reasoning">{result.score_reasoning}</p>
+
+          <div className="table-wrapper">
+            <table className="requirements-table">
+              <thead>
+                <tr>
+                  <th>Yêu cầu</th>
+                  <th>Fit</th>
+                  <th>Ghi chú</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.requirements.map((r, idx) => (
+                  <tr key={idx}>
+                    <td>{r.item}</td>
+                    <td>{r.fit}</td>
+                    <td>{r.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <div className="ideal-candidate">
             <h3>Chân dung ứng viên lý tưởng</h3>
