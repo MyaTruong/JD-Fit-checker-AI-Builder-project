@@ -13,7 +13,9 @@ Nhiệm vụ của bạn, dựa trên JD và profile được cung cấp:
 6. Liệt kê 2-3 "strengths_to_highlight" — điểm mạnh của ứng viên nên được nhấn mạnh khi apply/phỏng vấn. Mỗi điểm mạnh phải: (a) match với 1 yêu cầu KHÓ/quan trọng trong JD, không phải yêu cầu chung chung, và (b) phần "why_it_matters" nêu rõ vì sao đây là lợi thế NGÁCH so với các ứng viên khác cùng apply — không chỉ liệt kê lại kinh nghiệm.
 7. Liệt kê 2-3 "gaps" (khoảng cách) chính giữa profile và JD, mỗi gap kèm 1 "quick_action" — gợi ý hành động ngắn gọn trong 1 câu, cụ thể và có thể làm được ngay (KHÔNG viết roadmap dài hạn, không mốc thời gian, không kế hoạch học tập).
 
-QUAN TRỌNG: Chỉ trả về DUY NHẤT một JSON object hợp lệ, không kèm bất kỳ text, markdown, hay code fence nào khác. JSON phải đúng cấu trúc sau:
+Nếu ảnh JD hoặc ảnh CV/profile khó đọc, mờ, bị cắt, hoặc thiếu thông tin: VẪN PHẢI trả về đúng cấu trúc JSON đầy đủ như bên dưới — dùng trường "note" (trong requirements) hoặc "gaps" để ghi chú rằng nội dung không rõ ràng/không đọc được. TUYỆT ĐỐI KHÔNG được từ chối phân tích, không hỏi lại người dùng, không viết câu giải thích thay vì JSON — hãy phân tích hết mức có thể với thông tin đọc được và nêu rõ phần không chắc chắn trong nội dung JSON.
+
+QUAN TRỌNG: Câu trả lời của bạn phải bắt đầu bằng ký tự "{" và kết thúc bằng ký tự "}". Chỉ trả về DUY NHẤT một JSON object hợp lệ. TUYỆT ĐỐI KHÔNG thêm lời chào, lời dẫn, giải thích, ghi chú, hay markdown code fence (dấu \`\`\`) trước hoặc sau JSON. JSON phải đúng cấu trúc sau:
 
 {
   "requirements": [{"item": "string", "fit": "✅|⚠️|❌", "note": "string"}],
@@ -78,22 +80,48 @@ function buildUserContent({ jdMode, jdText, jdImages, profileMode, profileText, 
   return content
 }
 
+// Cleans up common ways Claude's response deviates from pure JSON:
+// markdown code fences, and any stray prose before/after the object.
+function cleanJsonCandidate(responseText) {
+  let text = responseText.trim()
+
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+  if (fenced) {
+    text = fenced[1].trim()
+  }
+
+  const firstBrace = text.indexOf('{')
+  const lastBrace = text.lastIndexOf('}')
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    text = text.slice(firstBrace, lastBrace + 1)
+  }
+
+  return text
+}
+
 function extractJson(responseText) {
-  const trimmed = responseText.trim()
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
-  const candidate = fenced ? fenced[1] : trimmed
+  const candidate = cleanJsonCandidate(responseText)
 
   let parsed
   try {
     parsed = JSON.parse(candidate)
   } catch (parseError) {
+    // This is a distinct failure mode from a failed API call: the request to
+    // Claude succeeded, but the text it returned isn't valid JSON even after
+    // stripping code fences/prose. Log the full raw text (not just the
+    // cleaned candidate) so intermittent cases can be diagnosed from Vercel
+    // function logs.
     console.error(
-      '[analyzeCore] Failed to parse Claude response as JSON:',
+      '[analyzeCore] JSON.parse failed after cleaning:',
       parseError.message,
-      '\nRaw response (first 2000 chars):',
-      trimmed.slice(0, 2000)
+      '\nCleaned candidate:',
+      candidate,
+      '\nOriginal raw response:',
+      responseText
     )
-    const err = new Error('Claude trả về dữ liệu không đúng định dạng JSON. Vui lòng thử lại.')
+    const err = new Error(
+      'Claude không trả về đúng định dạng JSON — có thể do ảnh khó đọc/mờ. Vui lòng thử ảnh rõ nét hơn hoặc dùng chế độ dán text.'
+    )
     err.statusCode = 502
     throw err
   }
@@ -109,7 +137,15 @@ function extractJson(responseText) {
   ]
   const missing = requiredKeys.filter((key) => !(key in parsed))
   if (missing.length > 0) {
-    const err = new Error(`Kết quả phân tích thiếu trường: ${missing.join(', ')}.`)
+    console.error(
+      '[analyzeCore] Parsed JSON is missing required fields:',
+      missing,
+      '\nParsed object:',
+      JSON.stringify(parsed)
+    )
+    const err = new Error(
+      `Kết quả phân tích không đầy đủ (thiếu trường: ${missing.join(', ')}). Vui lòng thử lại, hoặc dùng ảnh rõ nét hơn/chế độ dán text nếu vẫn lỗi.`
+    )
     err.statusCode = 502
     throw err
   }
@@ -199,12 +235,26 @@ export async function runAnalysis(body) {
     throw err
   }
 
+  if (response.stop_reason === 'refusal') {
+    console.error('[analyzeCore] Claude refused the request. stop_details:', JSON.stringify(response.stop_details))
+    const err = new Error(
+      'Claude từ chối phân tích nội dung này. Vui lòng kiểm tra lại ảnh/nội dung hoặc thử lại.'
+    )
+    err.statusCode = 502
+    throw err
+  }
+
   const textBlock = response.content.find((block) => block.type === 'text')
   if (!textBlock) {
     const err = new Error('Claude không trả về nội dung phân tích.')
     err.statusCode = 502
     throw err
   }
+
+  // Always log the raw text Claude returned, before any cleaning/parsing —
+  // this is what lets an intermittent failure be diagnosed after the fact
+  // from Vercel function logs, instead of only when parsing happens to fail.
+  console.log(`[analyzeCore] Raw response text (length=${textBlock.text.length}):`, textBlock.text)
 
   return extractJson(textBlock.text)
 }
