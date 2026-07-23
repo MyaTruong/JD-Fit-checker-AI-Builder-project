@@ -1,4 +1,4 @@
-import { fileToBase64 } from '../lib/fileToBase64'
+import { compressImageToBase64 } from '../lib/fileToBase64'
 
 function JDInput({ mode, onModeChange, text, onTextChange, images, onAddImages, onRemoveImage }) {
   async function handleFilesChange(e) {
@@ -6,12 +6,15 @@ function JDInput({ mode, onModeChange, text, onTextChange, images, onAddImages, 
     if (files.length === 0) return
 
     const newImages = await Promise.all(
-      files.map(async (file) => ({
-        mediaType: file.type,
-        data: await fileToBase64(file),
-        fileName: file.name,
-        previewUrl: URL.createObjectURL(file),
-      }))
+      files.map(async (file) => {
+        const { mediaType, data } = await compressImageToBase64(file)
+        return {
+          mediaType,
+          data,
+          fileName: file.name,
+          previewUrl: URL.createObjectURL(file),
+        }
+      })
     )
     onAddImages(newImages)
     e.target.value = ''
