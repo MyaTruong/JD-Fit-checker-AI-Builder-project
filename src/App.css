@@ -88,6 +88,12 @@
   font-size: 14px;
 }
 
+.file-error-text {
+  color: var(--color-skip);
+  font-size: 13px;
+  margin-top: var(--space-1);
+}
+
 .analyze-button {
   align-self: center;
   font-family: var(--font-heading);

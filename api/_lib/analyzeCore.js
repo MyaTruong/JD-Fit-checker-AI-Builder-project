@@ -86,7 +86,13 @@ function extractJson(responseText) {
   let parsed
   try {
     parsed = JSON.parse(candidate)
-  } catch {
+  } catch (parseError) {
+    console.error(
+      '[analyzeCore] Failed to parse Claude response as JSON:',
+      parseError.message,
+      '\nRaw response (first 2000 chars):',
+      trimmed.slice(0, 2000)
+    )
     const err = new Error('Claude trả về dữ liệu không đúng định dạng JSON. Vui lòng thử lại.')
     err.statusCode = 502
     throw err
@@ -143,6 +149,13 @@ export async function runAnalysis(body) {
   validateAnalyzeInput(body)
   const client = getClient()
 
+  console.log('[analyzeCore] Starting analysis:', {
+    jdMode: body.jdMode,
+    jdImageCount: body.jdImages?.length || 0,
+    profileMode: body.profileMode,
+    profileImageCount: body.profileImages?.length || 0,
+  })
+
   let response
   try {
     response = await client.messages.create({
@@ -158,9 +171,14 @@ export async function runAnalysis(body) {
       ],
     })
   } catch (apiError) {
+    console.error('[analyzeCore] Claude API call failed:', apiError)
+
     let message
     if (apiError instanceof Anthropic.APIConnectionError) {
       message = 'Server không thể kết nối tới Claude API do lỗi mạng. Vui lòng thử lại sau.'
+    } else if (apiError?.message && /image|media_type/i.test(apiError.message)) {
+      message =
+        'Định dạng ảnh không được Claude hỗ trợ (chỉ nhận JPEG/PNG/GIF/WEBP). Vui lòng thử ảnh khác hoặc dùng chế độ dán text.'
     } else if (apiError?.message) {
       message = `Lỗi từ Claude API: ${apiError.message}`
     } else {
@@ -168,6 +186,16 @@ export async function runAnalysis(body) {
     }
     const err = new Error(message)
     err.statusCode = apiError?.status || 502
+    throw err
+  }
+
+  console.log('[analyzeCore] Claude responded, stop_reason:', response.stop_reason)
+
+  if (response.stop_reason === 'max_tokens') {
+    const err = new Error(
+      'Kết quả phân tích bị cắt do quá dài (thường do quá nhiều ảnh). Vui lòng thử lại với ít ảnh hơn.'
+    )
+    err.statusCode = 502
     throw err
   }
 

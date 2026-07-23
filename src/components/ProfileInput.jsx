@@ -1,23 +1,27 @@
+import { useState } from 'react'
 import { compressImageToBase64 } from '../lib/fileToBase64'
 
 function ProfileInput({ mode, onModeChange, text, onTextChange, images, onAddImages, onRemoveImage }) {
+  const [fileError, setFileError] = useState('')
+
   async function handleFilesChange(e) {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
+    setFileError('')
 
-    const newImages = await Promise.all(
-      files.map(async (file) => {
-        const { mediaType, data } = await compressImageToBase64(file)
-        return {
-          mediaType,
-          data,
-          fileName: file.name,
-          previewUrl: URL.createObjectURL(file),
-        }
-      })
-    )
-    onAddImages(newImages)
-    e.target.value = ''
+    try {
+      const newImages = await Promise.all(
+        files.map(async (file) => {
+          const { mediaType, data, previewUrl } = await compressImageToBase64(file)
+          return { mediaType, data, fileName: file.name, previewUrl }
+        })
+      )
+      onAddImages(newImages)
+    } catch (err) {
+      setFileError(err.message || 'Không thể xử lý ảnh đã chọn. Vui lòng thử ảnh khác hoặc dùng chế độ dán text.')
+    } finally {
+      e.target.value = ''
+    }
   }
 
   return (
@@ -50,6 +54,7 @@ function ProfileInput({ mode, onModeChange, text, onTextChange, images, onAddIma
             className="file-input"
             onChange={handleFilesChange}
           />
+          {fileError && <p className="file-error-text">{fileError}</p>}
           {images.length > 0 && (
             <div className="thumbnail-grid">
               {images.map((img, idx) => (
