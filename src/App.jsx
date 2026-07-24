@@ -3,6 +3,7 @@ import JDInput from './components/JDInput'
 import ProfileInput from './components/ProfileInput'
 import ResultsSection from './components/ResultsSection'
 import { analyzeJDFit } from './lib/claudeApi'
+import { estimateBase64Bytes, MAX_TOTAL_IMAGE_BYTES } from './lib/fileToBase64'
 import './App.css'
 
 function App() {
@@ -51,6 +52,17 @@ function App() {
     }
     if (jdMode === 'image' && jdImages.length === 0) {
       setError('Vui lòng upload ít nhất 1 ảnh Job Description trước khi phân tích.')
+      return
+    }
+
+    const totalImageBytes = estimateBase64Bytes(jdImages) + estimateBase64Bytes(profileImages)
+    if (totalImageBytes > MAX_TOTAL_IMAGE_BYTES) {
+      const totalImageCount = jdImages.length + profileImages.length
+      const avgBytesPerImage = totalImageCount > 0 ? totalImageBytes / totalImageCount : 0
+      const suggestedMax = avgBytesPerImage > 0 ? Math.max(1, Math.floor(MAX_TOTAL_IMAGE_BYTES / avgBytesPerImage)) : totalImageCount
+      setError(
+        `Ảnh vẫn còn nặng (tổng ~${(totalImageBytes / 1024 / 1024).toFixed(1)}MB). Vui lòng chọn ít ảnh hơn (tối đa khoảng ${suggestedMax} ảnh mỗi lần) hoặc xóa bớt ảnh đã thêm.`
+      )
       return
     }
 

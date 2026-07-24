@@ -1,5 +1,13 @@
-const MAX_DIMENSION = 1400
+const MAX_DIMENSION = 1600
 const JPEG_QUALITY = 0.75
+
+// Vercel serverless functions cap the request body at ~4.5MB. Keep a safety
+// margin below that for JSON structure overhead and the JD/profile text.
+export const MAX_TOTAL_IMAGE_BYTES = 3.5 * 1024 * 1024
+
+export function estimateBase64Bytes(images) {
+  return (images || []).reduce((sum, img) => sum + (img?.data?.length || 0), 0)
+}
 
 function isHeicFile(file) {
   const type = (file.type || '').toLowerCase()
