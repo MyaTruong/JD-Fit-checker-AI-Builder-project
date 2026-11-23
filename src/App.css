@@ -64,6 +64,189 @@
   background: var(--color-accent-soft);
 }
 
+.mode-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.mode-tab {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.mode-tab:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.mode-tab-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.file-upload-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: var(--space-3) var(--space-2);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.file-dropzone:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.file-dropzone-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-accent);
+}
+
+.file-dropzone-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.file-input-hidden {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.file-chip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.file-chip-name {
+  font-weight: 500;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+.file-chip-meta {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.file-chip-remove {
+  position: static;
+  flex-shrink: 0;
+}
+
+.file-chip-extracting {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.file-chip-spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  animation: file-chip-spin 0.8s linear infinite;
+}
+
+@keyframes file-chip-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.file-chip-error {
+  border-color: var(--color-skip);
+  background: var(--color-skip-soft);
+}
+
+.file-chip-error .file-error-text {
+  margin-top: 0;
+}
+
+.file-chip-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.file-chip-retry {
+  position: relative;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+
+.file-chip-remove-link {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.file-chip-preview-toggle {
+  align-self: flex-start;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.file-chip-preview-textarea {
+  margin-top: 4px;
+}
+
 .text-input {
   width: 100%;
   box-sizing: border-box;
