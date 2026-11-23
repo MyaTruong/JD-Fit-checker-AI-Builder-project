@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import { compressImageToBase64 } from '../lib/fileToBase64'
+import FileUploadField from './FileUploadField'
 
-function JDInput({ mode, onModeChange, text, onTextChange, images, onAddImages, onRemoveImage }) {
+const MODES = [
+  { key: 'text', label: 'Dán text' },
+  { key: 'image', label: 'Upload ảnh' },
+  { key: 'file', label: 'Upload PDF/DOCX' },
+]
+
+function JDInput({ mode, onModeChange, text, onTextChange, images, onAddImages, onRemoveImage, onFileBusyChange }) {
   const [fileError, setFileError] = useState('')
 
   async function handleFilesChange(e) {
@@ -24,20 +31,33 @@ function JDInput({ mode, onModeChange, text, onTextChange, images, onAddImages, 
     }
   }
 
+  function handlePdfImageFallback(newImages) {
+    onAddImages(newImages)
+    onModeChange('image')
+  }
+
   return (
     <div className="panel">
       <div className="panel-header">
         <h2>Job Description</h2>
-        <button
-          type="button"
-          className="toggle-button"
-          onClick={() => onModeChange(mode === 'text' ? 'image' : 'text')}
-        >
-          {mode === 'text' ? 'Chuyển sang upload ảnh' : 'Chuyển sang dán text'}
-        </button>
       </div>
 
-      {mode === 'text' ? (
+      <div className="mode-tabs" role="tablist" aria-label="Chọn cách nhập Job Description">
+        {MODES.map((m) => (
+          <button
+            key={m.key}
+            type="button"
+            role="tab"
+            aria-selected={mode === m.key}
+            className={`mode-tab ${mode === m.key ? 'mode-tab-active' : ''}`}
+            onClick={() => onModeChange(m.key)}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'text' && (
         <textarea
           className="text-input"
           placeholder="Dán nội dung Job Description vào đây..."
@@ -45,7 +65,9 @@ function JDInput({ mode, onModeChange, text, onTextChange, images, onAddImages, 
           value={text}
           onChange={(e) => onTextChange(e.target.value)}
         />
-      ) : (
+      )}
+
+      {mode === 'image' && (
         <div className="file-upload">
           <input
             type="file"
@@ -73,6 +95,16 @@ function JDInput({ mode, onModeChange, text, onTextChange, images, onAddImages, 
             </div>
           )}
         </div>
+      )}
+
+      {mode === 'file' && (
+        <FileUploadField
+          fieldKey="jd"
+          text={text}
+          onTextChange={onTextChange}
+          onImageFallback={handlePdfImageFallback}
+          onBusyChange={onFileBusyChange}
+        />
       )}
     </div>
   )

@@ -9,6 +9,47 @@ export function estimateBase64Bytes(images) {
   return (images || []).reduce((sum, img) => sum + (img?.data?.length || 0), 0)
 }
 
+// Re-encodes an already-rendered canvas (e.g. a rasterized PDF page) as a
+// size-capped JPEG, using the same dimension/quality budget as
+// compressImageToBase64 so scanned-PDF page images stay consistent with the
+// existing image-upload pipeline's payload limits.
+export function canvasToJpegImage(canvas, fileName, { maxDimension = MAX_DIMENSION, quality = JPEG_QUALITY } = {}) {
+  return new Promise((resolve, reject) => {
+    let sourceCanvas = canvas
+    if (canvas.width > maxDimension || canvas.height > maxDimension) {
+      const scale = maxDimension / Math.max(canvas.width, canvas.height)
+      const resized = document.createElement('canvas')
+      resized.width = Math.round(canvas.width * scale)
+      resized.height = Math.round(canvas.height * scale)
+      resized.getContext('2d').drawImage(canvas, 0, 0, resized.width, resized.height)
+      sourceCanvas = resized
+    }
+
+    sourceCanvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('Không thể xử lý ảnh từ trang PDF này.'))
+          return
+        }
+        const reader = new FileReader()
+        reader.onload = () => {
+          const dataUrl = reader.result
+          resolve({
+            mediaType: 'image/jpeg',
+            data: dataUrl.slice(dataUrl.indexOf(',') + 1),
+            fileName,
+            previewUrl: URL.createObjectURL(blob),
+          })
+        }
+        reader.onerror = () => reject(new Error('Không thể đọc ảnh từ trang PDF này.'))
+        reader.readAsDataURL(blob)
+      },
+      'image/jpeg',
+      quality
+    )
+  })
+}
+
 function isHeicFile(file) {
   const type = (file.type || '').toLowerCase()
   if (type === 'image/heic' || type === 'image/heif') return true
