@@ -1,0 +1,36 @@
+# Product Manager (Mid-level) – PayNest
+
+**Company:** PayNest (fictional) – a mobile payments and e-wallet app with 2 million users in Vietnam.
+**Location:** Ho Chi Minh City (hybrid, 3 days in office)
+**Team:** Payments squad – 6 engineers, 1 designer, 1 data analyst
+
+## About the role
+You will own the roadmap for our bill-payment and money-transfer features. You will turn user problems and business goals into clear product requirements, work daily with engineering and design, and measure the impact of every release.
+
+## What you will do
+- Own and prioritize the product backlog for the Payments squad
+- Write PRDs and user stories with clear acceptance criteria
+- Run discovery with users together with the designer (interviews, usability tests)
+- Define success metrics for each feature and track them after launch
+- Design and analyze A/B tests to improve conversion in the payment funnel
+- Align with stakeholders in Finance, Compliance and Customer Support
+
+## Must-have requirements
+1. 3+ years of experience as a Product Manager or Product Owner
+2. Experience building and managing a product roadmap and backlog
+3. Strong skills in writing PRDs and user stories
+4. Experience working in Agile/Scrum teams with engineers and designers
+5. Can use SQL to query data on your own (joins, aggregations)
+6. Experience defining product metrics and running A/B tests
+7. Good stakeholder management and communication skills
+8. Professional working English (written and spoken)
+
+## Nice-to-have
+- Experience in fintech, payments or e-wallet products
+- Design background or hands-on experience with Figma
+- Basic understanding of APIs and system integration
+
+## Benefits
+- 13th-month salary and performance bonus
+- Premium health insurance
+- 15 days of annual leave
